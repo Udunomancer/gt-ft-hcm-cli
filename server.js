@@ -19,8 +19,22 @@ connection.connect(function (err) {
 })
 
 function viewTable() {
-    connection.query("SELECT * FROM department;", (err, data) => {
-        if (err) throw err;
-        console.table(data);
+    const queryString = "SELECT * FROM ";
+    inquirer.prompt([
+        {
+            type: "list",
+            message: "View what table?",
+            name: "tableRouter",
+            choices: [
+                { name: "Departments Table", value: "department" },
+                { name: "Roles Table", value: "role" },
+                { name: "Employees Table", value: "employee" }
+            ]
+        }
+    ]).then(({tableRouter}) => {
+        connection.query(queryString + connection.escapeId(tableRouter), (err, data) => {
+            if (err) throw err;
+            console.table(data);
+        });
     });
 }
