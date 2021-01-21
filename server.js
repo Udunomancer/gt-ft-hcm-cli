@@ -15,4 +15,12 @@ const connection = mysql.createConnection({
 connection.connect(function (err) {
     if (err) throw err;
     console.log("connected as id " + connection.threadId + "\n");
+    viewTable();
 })
+
+function viewTable() {
+    connection.query("SELECT * FROM department;", (err, data) => {
+        if (err) throw err;
+        console.table(data);
+    });
+}
