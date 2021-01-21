@@ -15,8 +15,31 @@ const connection = mysql.createConnection({
 connection.connect(function (err) {
     if (err) throw err;
     console.log("connected as id " + connection.threadId + "\n");
-    init();
+    startStop();
 })
+
+async function startStop() {
+
+    let continueProgram = true;
+
+    while (continueProgram) {
+
+        continueProgram = await directory();
+
+    }
+
+    exit();
+}
+
+async function directory() {
+
+    const userData = await mainMenu();
+
+    console.log(userData);
+
+    return false;
+
+}
 
 function viewTable() {
     const queryString = "SELECT * FROM ";
@@ -39,8 +62,8 @@ function viewTable() {
     });
 }
 
-function init() {
-    inquirer.prompt([
+function mainMenu() {
+    return inquirer.prompt([
         {
             type: "list",
             message: "Choose an operation:",
@@ -58,9 +81,7 @@ function init() {
             choices: returnSubSelections,
             name: "actionSelection"
         }
-    ]).then((answers) => {
-            console.log(answers);
-    });
+    ]);
 }
 
 function returnSubSelections({actionType}) {
