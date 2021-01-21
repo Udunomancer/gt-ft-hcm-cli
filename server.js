@@ -45,28 +45,60 @@ function init() {
             type: "list",
             message: "Choose an operation:",
             choices: [
-                "View Existing Data",
-                "Update Existing Data",
-                "Add New Data",
+                "View Existing Employees/Roles/Departments",
+                "Update Existing Employees/Roles/Departments",
+                "Add New Employees/Roles/Departments",
                 "Exit"
             ],
-            name: "operationTierOne"
+            name: "actionType"
+        },{
+            when: skipOnExit,
+            type: "list",
+            message: "===========",
+            choices: returnSubSelections,
+            name: "actionSelection"
         }
-    ]).then(({operationTierOne}) => {
-        switch (operationTierOne) {
-            case "View Existing Data":
-                console.log("View");
-                break;
-            case "Update Existing Data":
-                console.log("Update");
-                break;
-            case "Add New Data":
-                console.log("Add");
-                break;
-            default:
-                exit();
-        }
+    ]).then((answers) => {
+            console.log(answers);
     });
+}
+
+function returnSubSelections({actionType}) {
+    switch (actionType) {
+        case "View Existing Employees/Roles/Departments":
+            return [
+                { name: "View: ALL Departments", value: "1" },
+                { name: "View: ALL Roles", value: "2" },
+                { name: "View: ALL Employees", value: "3" },
+                { name: "View: ALL Employees by Manager", value: "4" },
+                { name: "View: Utilized Salary, by Department", value: "5" },
+                { name: "Go Back", value: "6" }
+            ]
+        case "Update Existing Employees/Roles/Departments":
+            return [
+                { name: "Employee Update: New Role", value: "1" },
+                { name: "Employee Update: New Manager", value: "2" },
+                { name: "Delete: Department", value: "3" },
+                { name: "Delete: Role", value: "4" },
+                { name: "Delete: Employee", value: "5" },
+                { name: "Go Back", value: "6" }
+            ]
+        case "Add New Employees/Roles/Departments":
+            return [
+                { name: "Add: NEW Employee", value: "1" },
+                { name: "Add: NEW Role", value: "2" },
+                { name: "Add: NEW Department", value: "3" },
+                { name: "Go Back", value: "4" }
+            ]
+    }
+}
+
+function skipOnExit({actionType}) {
+    if (actionType === "Exit") {
+        return false;
+    } else {
+        return true;
+    }
 }
 
 function exit() {
