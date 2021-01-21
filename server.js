@@ -15,7 +15,7 @@ const connection = mysql.createConnection({
 connection.connect(function (err) {
     if (err) throw err;
     console.log("connected as id " + connection.threadId + "\n");
-    viewTable();
+    init();
 })
 
 function viewTable() {
@@ -37,4 +37,38 @@ function viewTable() {
             console.table(data);
         });
     });
+}
+
+function init() {
+    inquirer.prompt([
+        {
+            type: "list",
+            message: "Choose an operation:",
+            choices: [
+                "View Existing Data",
+                "Update Existing Data",
+                "Add New Data",
+                "Exit"
+            ],
+            name: "operationTierOne"
+        }
+    ]).then(({operationTierOne}) => {
+        switch (operationTierOne) {
+            case "View Existing Data":
+                console.log("View");
+                break;
+            case "Update Existing Data":
+                console.log("Update");
+                break;
+            case "Add New Data":
+                console.log("Add");
+                break;
+            default:
+                exit();
+        }
+    });
+}
+
+function exit() {
+    connection.end();
 }
