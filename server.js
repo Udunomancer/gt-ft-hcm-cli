@@ -44,7 +44,7 @@ async function directory() {
       updateOps();
       return true;
     case "add":
-      addOps();
+      addOps(actionSelection);
       return true;
     case "exit":
       console.log("Ending Session...");
@@ -72,21 +72,17 @@ function viewOps(queryObject) {
       resolve(data);
     });
   });
-  // connection.query(queryStrings[queryObject.qString], (err, data) => {
-  //   return new Promise
-  //   if (err) {
-  //       throw err;
-  //   } else {
-  //       return data;
-  //   };
-  // });
 }
 
-function updateOps() {
+function updateOps(queryObject) {
+  console.log(queryObject.qString);
+  console.log(queryObject.qPrompt);
   console.log("UPDATE TABLES");
 }
 
-function addOps() {
+function addOps(queryObject) {
+  console.log(queryObject.qString);
+  console.log(queryObject.qPrompt);
   console.log("ADD TO TABLES");
 }
 
@@ -144,9 +140,9 @@ function returnSubSelections({ actionType }) {
       ];
     case "add":
       return [
-        { name: "Add: NEW Employee", value: "1" },
-        { name: "Add: NEW Role", value: "2" },
-        { name: "Add: NEW Department", value: "3" },
+        { name: "Add: NEW Employee", value: { qString: "INSERT INTO employee (?) VALUES (?)", qPrompt: "addEmp"} },
+        { name: "Add: NEW Role", value: { qString: "INSERT INTO role (?) VALUES (?)", qPrompt: "addRole" } },
+        { name: "Add: NEW Department", value: { qString: "INSERT INTO department (name) VALUES (?)", qPrompt: "addDept" } },
         { name: "Go Back", value: "goback" },
       ];
   }
