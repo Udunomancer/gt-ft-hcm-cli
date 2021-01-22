@@ -38,7 +38,7 @@ async function directory() {
 
   switch (actionType) {
     case "view":
-      viewOps(actionSelection);
+      await viewOps(actionSelection).then(data => console.table(data), err => console.log(err));
       return true;
     case "update":
       updateOps();
@@ -62,26 +62,23 @@ function viewOps(queryObject) {
     allEmp: "SELECT * FROM employee",
     empByMgr: "SELECT * FROM employee WHERE manager_id = ?",
     deptSal:
-      "SELECT C.name, SUM(B.salary) FROM employee A INNER JOIN role B ON A.role_id = B.id INNER JOIN department C ON B.department_id = C.id GROUP BY B.department_id",
+      "SELECT C.name, SUM(B.salary) FROM employee A LEFT JOIN role B ON A.role_id = B.id LEFT JOIN department C ON B.department_id = C.id GROUP BY B.department_id",
   };
-  console.log("VIEW TABLES");
-  console.log(queryStrings[queryObject.qString]);
-  // inquirer.prompt([
-  //     {
-  //         type: "list",
-  //         message: "View what table?",
-  //         name: "tableRouter",
-  //         choices: [
-  //             { name: "Departments Table", value: "department" },
-  //             { name: "Roles Table", value: "role" },
-  //             { name: "Employees Table", value: "employee" }
-  //         ]
-  //     }
-  // ]).then(({tableRouter}) => {
-  //     connection.query(queryString + connection.escapeId(tableRouter), (err, data) => {
-  //         if (err) throw err;
-  //         console.table(data);
-  //     });
+  
+  return new Promise(function(resolve, reject) {
+    connection.query(queryStrings[queryObject.qString], function(err, data) {
+      if(err)
+        return reject(err);
+      resolve(data);
+    });
+  });
+  // connection.query(queryStrings[queryObject.qString], (err, data) => {
+  //   return new Promise
+  //   if (err) {
+  //       throw err;
+  //   } else {
+  //       return data;
+  //   };
   // });
 }
 
@@ -112,7 +109,7 @@ function mainMenu() {
     {
       when: skipOnExit,
       type: "list",
-      message: "===========",
+      message: "==================",
       choices: returnSubSelections,
       name: "actionSelection",
     },
