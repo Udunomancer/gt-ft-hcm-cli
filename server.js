@@ -41,10 +41,10 @@ async function directory() {
       await viewOps(actionSelection).then(data => console.table(data), err => console.log(err));
       return true;
     case "update":
-      updateOps();
+      await updateOps();
       return true;
     case "add":
-      addOps(actionSelection);
+      await addOps(actionSelection).then(data => console.log(data), err => console.log(err));
       return true;
     case "exit":
       console.log("Ending Session...");
@@ -81,9 +81,36 @@ function updateOps(queryObject) {
 }
 
 function addOps(queryObject) {
-  console.log(queryObject.qString);
-  console.log(queryObject.qPrompt);
-  console.log("ADD TO TABLES");
+  
+  return new Promise(function(resolve, reject) {
+    inquirer.prompt([
+      {
+        type: "input",
+        message: "Name of department to INSERT?",
+        name: "dept"
+      }
+    ]).then(function(response, err) {
+      if(err)
+        return reject(err);
+      resolve(response);
+    });
+  });
+  // inquirer.prompt([
+  //   {
+  //     type: "input",
+  //     message: "Name of department to INSERT?",
+  //     name: "dept"
+  //   }
+  // ]).then((response) => {
+  //   connection.query(queryObject.qString, response.dept, function(err, data) {
+  //     if(err)
+  //       return err;
+  //     console.log("Department Added");
+  //   })
+  // })
+  // console.log(queryObject.qString);
+  // console.log(queryObject.qPrompt);
+  // console.log("ADD TO TABLES");
 }
 
 function mainMenu() {
@@ -142,7 +169,7 @@ function returnSubSelections({ actionType }) {
       return [
         { name: "Add: NEW Employee", value: { qString: "INSERT INTO employee (?) VALUES (?)", qPrompt: "addEmp"} },
         { name: "Add: NEW Role", value: { qString: "INSERT INTO role (?) VALUES (?)", qPrompt: "addRole" } },
-        { name: "Add: NEW Department", value: { qString: "INSERT INTO department (name) VALUES (?)", qPrompt: "addDept" } },
+        { name: "Add: NEW Department", value: { qString: "INSERT INTO department (?) VALUES (?)", qPrompt: "addDept" } },
         { name: "Go Back", value: "goback" },
       ];
   }
