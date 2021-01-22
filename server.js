@@ -85,6 +85,44 @@ function addOps(queryObject) {
   return new Promise(function(resolve, reject) {
     inquirer.prompt([
       {
+        when: queryObject.qPrompt === "addEmp",
+        type: "input",
+        message: "First Name of employee to INSERT?",
+        name: "empFirstName"
+      },{
+        when: queryObject.qPrompt === "addEmp",
+        type: "input",
+        message: "Last Name of employee to INSERT?",
+        name: "empLastName"
+      },{
+        when: queryObject.qPrompt === "addEmp",
+        type: "list",
+        choices: ["EmpTEST1", "EmpTEST2"],
+        message: "Role of Employee to INSERT?",
+        name: "empRole"
+      },{
+        when: queryObject.qPrompt === "addEmp",
+        type: "input",
+        message: "Manager of Employee to INSERT?",
+        name: "empMgr"
+      },{
+        when: queryObject.qPrompt === "addRole",
+        type: "input",
+        message: "Title of Role to INSERT?",
+        name: "roleTitle"
+      },{
+        when: queryObject.qPrompt === "addRole",
+        type: "number",
+        message: "Salary of Role to INSERT?",
+        name: "roleSal"
+      },{
+        when: queryObject.qPrompt === "addRole",
+        type: "list",
+        choices: ["Role1", "Role2"],
+        message: "Department of Role to INSERT?",
+        name: "roleDept"
+      },{
+        when: queryObject.qPrompt === "addDept",
         type: "input",
         message: "Name of department to INSERT?",
         name: "dept"
@@ -167,9 +205,9 @@ function returnSubSelections({ actionType }) {
       ];
     case "add":
       return [
-        { name: "Add: NEW Employee", value: { qString: "INSERT INTO employee (?) VALUES (?)", qPrompt: "addEmp"} },
-        { name: "Add: NEW Role", value: { qString: "INSERT INTO role (?) VALUES (?)", qPrompt: "addRole" } },
-        { name: "Add: NEW Department", value: { qString: "INSERT INTO department (?) VALUES (?)", qPrompt: "addDept" } },
+        { name: "Add: NEW Employee", value: { qString: "INSERT INTO employee (??) VALUES (?)", qPrompt: "addEmp"} },
+        { name: "Add: NEW Role", value: { qString: "INSERT INTO role (??) VALUES (?)", qPrompt: "addRole" } },
+        { name: "Add: NEW Department", value: { qString: "INSERT INTO department (??) VALUES (?)", qPrompt: "addDept" } },
         { name: "Go Back", value: "goback" },
       ];
   }
