@@ -3,6 +3,8 @@
 
 ## Description
 
+[Video Showing Functionality](https://drive.google.com/file/d/19Voo3X2L6fwqLTkU52nLbWcC5saR9C_6/view)
+
 Application to run from the command line to manage a Human Capital Management system.  Takes in User Input and presents options/or takes action on a MySQL server.  Programmed in JavaScript, requires inquirer and mysql packages.
 
 ## Table of Contents
