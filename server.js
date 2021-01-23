@@ -41,7 +41,7 @@ async function directory() {
       await viewOps(actionSelection).then(data => console.table(data), err => console.log(err));
       return true;
     case "update":
-      await updateOps();
+      await updateOps(actionSelection).then(data => console.log(data), err => console.log(err));
       return true;
     case "add":
       await addOps(actionSelection).then(data => console.log(data), err => console.log(err));
@@ -55,7 +55,7 @@ async function directory() {
   }
 }
 
-function viewOps(queryObject) {
+async function viewOps(queryObject) {
   const queryStrings = {
     allDept: "SELECT * FROM department",
     allRole: "SELECT * FROM role",
@@ -64,27 +64,57 @@ function viewOps(queryObject) {
     deptSal:
       "SELECT C.name, SUM(B.salary) FROM employee A LEFT JOIN role B ON A.role_id = B.id LEFT JOIN department C ON B.department_id = C.id GROUP BY B.department_id",
   };
-  
-  return new Promise(function(resolve, reject) {
-    connection.query(queryStrings[queryObject.qString], function(err, data) {
-      if(err)
-        return reject(err);
-      resolve(data);
-    });
+
+  return new Promise(async function(resolve, reject) {
+    if (queryObject.qString === "empByMgr") {
+      let mgrChoices = await getManagerForPrompt();
+      inquirer.prompt([
+        {
+          type: "list",
+          choices: mgrChoices,
+          message: "View Employees under which Manager?",
+          name: "manager"
+        }
+      ]).then(function(err, data) {
+        if(err)
+          return reject(err);
+        connection.query("SELECT * FROM employee WHERE manager_id = ?", data.manager, function(err, request) {
+          if (err)
+            return reject(err);
+          resolve(request);
+        });
+      });
+    } else {
+      connection.query(queryStrings[queryObject.qString], function(err, data) {
+        if(err)
+          return reject(err);
+        resolve(data);
+      });
+    }
   });
 }
 
-function updateOps(queryObject) {
-  console.log(queryObject.qString);
-  console.log(queryObject.qPrompt);
-  console.log("UPDATE TABLES");
+function updateOps({qString}) {
+  
+  return new Promise(function(resolve, reject) {
+    inquirer.prompt([
+      when: 
+    ])
+  })
 }
 
 async function addOps({qString, qPrompt}) {
   
-  
-  let mgrChoices = await getManagerForPrompt();
-  let roleChoices = await getRoleForPrompt();
+  let mgrChoices;
+  let roleChoices;
+  let deptChoices;
+  if (qPrompt === "addEmp") {
+    mgrChoices = await getManagerForPrompt();
+    roleChoices = await getRoleForPrompt();
+  }
+  if (qPrompt === "addRole") {
+    deptChoices = await getDeptForPrompt();
+  }
 
   return new Promise(function(resolve, reject) {
     inquirer.prompt([
@@ -104,14 +134,7 @@ async function addOps({qString, qPrompt}) {
         choices: roleChoices,
         message: "Role of Employee to INSERT?",
         name: "role_id"
-      },
-      // {
-      //   when: qPrompt === "addEmp",
-      //   type: "confirm",
-      //   message: "Assign a manager to INSERTED employee?",
-      //   name: "confirmMgr"
-      // },
-      {
+      },{
         when: qPrompt === "addEmp",
         type: "list",
         choices: mgrChoices,
@@ -130,7 +153,7 @@ async function addOps({qString, qPrompt}) {
       },{
         when: qPrompt === "addRole",
         type: "list",
-        choices: ["Role1", "Role2"],
+        choices: deptChoices,
         message: "Department of Role to INSERT?",
         name: "department_id"
       },{
@@ -143,11 +166,6 @@ async function addOps({qString, qPrompt}) {
       if(err)
         return reject(err);
 
-        // connection.query(queryStrings[queryObject.qString], function(err, data) {
-        //   if(err)
-        //     return reject(err);
-        //   resolve(data);
-        // });
       let keys = [];
       let values = [];
       for (const [key, value] of Object.entries(response)) {
@@ -189,8 +207,21 @@ function getRoleForPrompt() {
       }
       resolve(choices);
     });
-    
-  })
+  });
+}
+
+function getDeptForPrompt() {
+  return new Promise(function(resolve, reject) {
+    let choices = [];
+    connection.query("SELECT id, name FROM department", function(err, data) {
+      if(err)
+        return reject(err);
+      for(let i = 0; i < data.length; i++) {
+        choices.push({name: data[i].name, value: data[i].id});
+      }
+      resolve(choices);
+    });
+  });
 }
 
 function mainMenu() {
@@ -228,7 +259,7 @@ function returnSubSelections({ actionType }) {
         { name: "View: ALL Employees", value: { qString: "allEmp" } },
         {
           name: "View: ALL Employees by Manager",
-          value: { qString: "empByMgr", qPrompt: "activeMgrs" },
+          value: { qString: "empByMgr" },
         },
         {
           name: "View: Utilized Salary, by Department",
@@ -238,11 +269,11 @@ function returnSubSelections({ actionType }) {
       ];
     case "update":
       return [
-        { name: "Employee Update: New Role", value: "1" },
-        { name: "Employee Update: New Manager", value: "2" },
-        { name: "Delete: Department", value: "3" },
-        { name: "Delete: Role", value: "4" },
-        { name: "Delete: Employee", value: "5" },
+        { name: "Employee Update: New Role", value: {qString: "", qPrompt: "empNewRole"} },
+        { name: "Employee Update: New Manager", value: {qString: "", qPrompt: "empNewMgr"} },
+        { name: "Delete: Department", value: {qString: "", qPrompt: "delDept"} },
+        { name: "Delete: Role", value: {qString: "", qPrompt: "delRole"} },
+        { name: "Delete: Employee", value: {qString: "", qPrompt: "delEmp"} },
         { name: "Go Back", value: "goback" },
       ];
     case "add":
