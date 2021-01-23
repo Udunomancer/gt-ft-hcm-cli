@@ -80,75 +80,117 @@ function updateOps(queryObject) {
   console.log("UPDATE TABLES");
 }
 
-function addOps(queryObject) {
+async function addOps({qString, qPrompt}) {
   
+  
+  let mgrChoices = await getManagerForPrompt();
+  let roleChoices = await getRoleForPrompt();
+
   return new Promise(function(resolve, reject) {
     inquirer.prompt([
       {
-        when: queryObject.qPrompt === "addEmp",
+        when: qPrompt === "addEmp",
         type: "input",
         message: "First Name of employee to INSERT?",
-        name: "empFirstName"
+        name: "first_name"
       },{
-        when: queryObject.qPrompt === "addEmp",
+        when: qPrompt === "addEmp",
         type: "input",
         message: "Last Name of employee to INSERT?",
-        name: "empLastName"
+        name: "last_name"
       },{
-        when: queryObject.qPrompt === "addEmp",
+        when: qPrompt === "addEmp",
         type: "list",
-        choices: ["EmpTEST1", "EmpTEST2"],
+        choices: roleChoices,
         message: "Role of Employee to INSERT?",
-        name: "empRole"
-      },{
-        when: queryObject.qPrompt === "addEmp",
-        type: "input",
+        name: "role_id"
+      },
+      // {
+      //   when: qPrompt === "addEmp",
+      //   type: "confirm",
+      //   message: "Assign a manager to INSERTED employee?",
+      //   name: "confirmMgr"
+      // },
+      {
+        when: qPrompt === "addEmp",
+        type: "list",
+        choices: mgrChoices,
         message: "Manager of Employee to INSERT?",
-        name: "empMgr"
+        name: "manager_id"
       },{
-        when: queryObject.qPrompt === "addRole",
+        when: qPrompt === "addRole",
         type: "input",
         message: "Title of Role to INSERT?",
-        name: "roleTitle"
+        name: "title"
       },{
-        when: queryObject.qPrompt === "addRole",
+        when: qPrompt === "addRole",
         type: "number",
         message: "Salary of Role to INSERT?",
-        name: "roleSal"
+        name: "salary"
       },{
-        when: queryObject.qPrompt === "addRole",
+        when: qPrompt === "addRole",
         type: "list",
         choices: ["Role1", "Role2"],
         message: "Department of Role to INSERT?",
-        name: "roleDept"
+        name: "department_id"
       },{
-        when: queryObject.qPrompt === "addDept",
+        when: qPrompt === "addDept",
         type: "input",
         message: "Name of department to INSERT?",
-        name: "dept"
+        name: "name"
       }
     ]).then(function(response, err) {
       if(err)
         return reject(err);
-      resolve(response);
+
+        // connection.query(queryStrings[queryObject.qString], function(err, data) {
+        //   if(err)
+        //     return reject(err);
+        //   resolve(data);
+        // });
+      let keys = [];
+      let values = [];
+      for (const [key, value] of Object.entries(response)) {
+        keys.push(key);
+        values.push(value);
+      }
+      connection.query(qString, [keys, values], function(err, data) {
+        if (err)
+          return reject(err);
+        resolve(data);
+      })
     });
   });
-  // inquirer.prompt([
-  //   {
-  //     type: "input",
-  //     message: "Name of department to INSERT?",
-  //     name: "dept"
-  //   }
-  // ]).then((response) => {
-  //   connection.query(queryObject.qString, response.dept, function(err, data) {
-  //     if(err)
-  //       return err;
-  //     console.log("Department Added");
-  //   })
-  // })
-  // console.log(queryObject.qString);
-  // console.log(queryObject.qPrompt);
-  // console.log("ADD TO TABLES");
+}
+
+function getManagerForPrompt() {
+  return new Promise(function(resolve, reject) {
+    let choices = [];
+    connection.query("SELECT id, first_name, last_name FROM employee", function(err, data) {
+      if(err)
+        return reject(err);
+      for(let i = 0; i < data.length; i++) {
+        choices.push({name: data[i].first_name + " " + data[i].last_name, value: data[i].id});
+      }
+      resolve(choices);
+    });
+    
+  })
+}
+
+function getRoleForPrompt() {
+  return new Promise(function(resolve, reject) {
+    let choices = [];
+    connection.query("SELECT id, title FROM role", function(err, data) {
+      if(err)
+        return reject(err);
+      for(let i = 0; i < data.length; i++) {
+        choices.push({name: data[i].title, value: data[i].id});
+      }
+      resolve(choices);
+    });
+    
+  })
 }
 
 function mainMenu() {
