@@ -41,10 +41,10 @@ async function directory() {
       await viewOps(actionSelection).then(data => console.table(data), err => console.log(err));
       return true;
     case "update":
-      await updateOps(actionSelection).then(data => console.log(data), err => console.log(err));
+      await updateOps(actionSelection).then(data => console.log("Updated"), err => console.log(err));
       return true;
     case "add":
-      await addOps(actionSelection).then(data => console.log(data), err => console.log(err));
+      await addOps(actionSelection).then(data => console.log("Updated"), err => console.log(err));
       return true;
     case "exit":
       console.log("Ending Session...");
@@ -62,7 +62,7 @@ async function viewOps(queryObject) {
     allEmp: "SELECT A.id, A.first_name, A.last_name, B.title FROM employee A LEFT JOIN role B ON A.role_id = B.id",
     empByMgr: "SELECT B.first_name AS Manager, A.first_name, A.last_name FROM employee A LEFT JOIN employee B ON A.manager_id = B.id WHERE A.manager_id = ?",
     deptSal:
-      "SELECT C.name, SUM(B.salary) FROM employee A LEFT JOIN role B ON A.role_id = B.id LEFT JOIN department C ON B.department_id = C.id GROUP BY B.department_id",
+      "SELECT C.name, SUM(B.salary) FROM employee A LEFT JOIN role B ON A.role_id = B.id LEFT JOIN department C ON B.department_id = C.id GROUP BY B.department_id;",
   };
 
   return new Promise(async function(resolve, reject) {
@@ -78,7 +78,6 @@ async function viewOps(queryObject) {
       ]).then(function(response, err) {
         if(err)
           return reject(err);
-        // connection.query("SELECT * FROM employee WHERE manager_id = ?", data.manager, function(err, request) {
         connection.query(queryStrings[queryObject.qString], [response.manager], function(err, request) {
           if (err)
             return reject(err);
@@ -106,7 +105,7 @@ async function updateOps({qString, qPrompt}) {
   let roleChoices;
   let deptChoices;
 
-  if (qPrompt === "empNewRole" || qPrompt === "empNewMgr") {
+  if (qPrompt === "empNewRole" || qPrompt === "empNewMgr" || qPrompt === "delEmp") {
     empChoices = await getManagerForPrompt();
   }
   if (qPrompt === "empNewRole" || qPrompt === "delRole") {
@@ -177,21 +176,21 @@ async function updateOps({qString, qPrompt}) {
         case "delDept":
           connection.query(qString, [response.dept], function(err, data) {
             if (err)
-              return reject(err)
+              return reject("Cannot Delete, there may be existing Roles under this Department.")
             resolve("Department Successfully Deleted")
           })
           return;
         case "delRole":
           connection.query(qString, [response.role], function(err, data) {
             if (err)
-              return reject(err)
+              return reject("Cannot Delete, there may be existing Employees in this role")
             resolve("Role Successfully Deleted")
           })
           return;
         case "delEmp":
           connection.query(qString, [response.emp], function(err, data) {
             if (err)
-              return reject(err)
+              return reject("Cannot Delete, this may be a manager for some Employees.")
             resolve("Employee Successfully Deleted")
           })
           return;
