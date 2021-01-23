@@ -94,12 +94,78 @@ async function viewOps(queryObject) {
   });
 }
 
-function updateOps({qString}) {
+async function updateOps({qString, qPrompt}) {
   
+  let empChoices;
+  let roleChoices;
+  let deptChoices;
+
+  if (qPrompt === "empNewRole" || qPrompt === "empNewMgr") {
+    empChoices = await getManagerForPrompt();
+  }
+  if (qPrompt === "empNewRole" || qPrompt === "delRole") {
+    roleChoices = await getRoleForPrompt();
+  }
+  if (qPrompt === "delDept") {
+    deptChoices = await getDeptForPrompt();
+  }
+
   return new Promise(function(resolve, reject) {
+    
     inquirer.prompt([
-      when: 
-    ])
+      {
+        when: qPrompt === "empNewRole" || qPrompt === "empNewMgr",
+        type: "list",
+        message: "What Employee would you like to edit?",
+        choices: empChoices,
+        name: "employee"
+      },{
+        when: qPrompt === "empNewRole",
+        type: "list",
+        message: "Select new Role",
+        choices: roleChoices,
+        name: "empRole"
+      },{
+        when: qPrompt === "empNewMgr",
+        type: "list",
+        message: "Select new Manager",
+        choices: empChoices,
+        name: "manager"
+      },{
+        when: qPrompt === "delDept",
+        type: "list",
+        message: "Select Department to Delete",
+        choices: deptChoices,
+        name: "dept"
+      },{
+        when: qPrompt === "delRole",
+        type: "list",
+        message: "Select Role to Delete",
+        choices: roleChoices,
+        name: "role"
+      },{
+        when: qPrompt === "delEmp",
+        type: "list",
+        message: "Select Employee to Delete",
+        choices: empChoices,
+        name: "delEmp"
+      }
+    ]).then(function(response, err) {
+      if(err)
+        return reject(err);
+
+      let keys = [];
+      let values = [];
+      for (const [key, value] of Object.entries(response)) {
+        keys.push(key);
+        values.push(value);
+      }
+      connection.query(qString, [keys, values], function(err, data) {
+        if (err)
+          return reject(err);
+        resolve(data);
+      })
+    })
   })
 }
 
@@ -269,11 +335,11 @@ function returnSubSelections({ actionType }) {
       ];
     case "update":
       return [
-        { name: "Employee Update: New Role", value: {qString: "", qPrompt: "empNewRole"} },
-        { name: "Employee Update: New Manager", value: {qString: "", qPrompt: "empNewMgr"} },
-        { name: "Delete: Department", value: {qString: "", qPrompt: "delDept"} },
-        { name: "Delete: Role", value: {qString: "", qPrompt: "delRole"} },
-        { name: "Delete: Employee", value: {qString: "", qPrompt: "delEmp"} },
+        { name: "Employee Update: New Role", value: {qString: "UPDATE employee SET role_id = ? WHERE id = ?", qPrompt: "empNewRole"} },
+        { name: "Employee Update: New Manager", value: {qString: "UPDATE employee SET manager_id = ? WHERE id = ?", qPrompt: "empNewMgr"} },
+        { name: "Delete: Department", value: {qString: "DELETE FROM department WHERE id = ?", qPrompt: "delDept"} },
+        { name: "Delete: Role", value: {qString: "DELETE FROM role WHERE id = ?", qPrompt: "delRole"} },
+        { name: "Delete: Employee", value: {qString: "DELETE FROM employee WHERE id = ?", qPrompt: "delEmp"} },
         { name: "Go Back", value: "goback" },
       ];
     case "add":
