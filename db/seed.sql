@@ -1,3 +1,5 @@
+USE hcm_db;
+
 INSERT INTO department (name)
 VALUES
 	("FINANCE"),

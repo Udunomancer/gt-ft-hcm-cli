@@ -57,10 +57,10 @@ async function directory() {
 
 async function viewOps(queryObject) {
   const queryStrings = {
-    allDept: "SELECT * FROM department",
-    allRole: "SELECT * FROM role",
-    allEmp: "SELECT * FROM employee",
-    empByMgr: "SELECT * FROM employee WHERE manager_id = ?",
+    allDept: "SELECT id, name FROM department",
+    allRole: "SELECT A.id, A.title, A.salary, B.name FROM role A LEFT JOIN department B ON A.department_id = B.id",
+    allEmp: "SELECT A.id, A.first_name, A.last_name, B.title FROM employee A LEFT JOIN role B ON A.role_id = B.id",
+    empByMgr: "SELECT B.first_name AS Manager, A.first_name, A.last_name FROM employee A LEFT JOIN employee B ON A.manager_id = B.id WHERE A.manager_id = ?",
     deptSal:
       "SELECT C.name, SUM(B.salary) FROM employee A LEFT JOIN role B ON A.role_id = B.id LEFT JOIN department C ON B.department_id = C.id GROUP BY B.department_id",
   };
@@ -75,13 +75,19 @@ async function viewOps(queryObject) {
           message: "View Employees under which Manager?",
           name: "manager"
         }
-      ]).then(function(err, data) {
+      ]).then(function(response, err) {
         if(err)
           return reject(err);
-        connection.query("SELECT * FROM employee WHERE manager_id = ?", data.manager, function(err, request) {
+        // connection.query("SELECT * FROM employee WHERE manager_id = ?", data.manager, function(err, request) {
+        connection.query(queryStrings[queryObject.qString], [response.manager], function(err, request) {
           if (err)
             return reject(err);
-          resolve(request);
+          if (request.length <= 0) {
+            return resolve("No one reports to this employee.")
+          }
+          console.log("MYSQL: " + request);
+          console.log("INQUIRER: " + response);
+          return resolve(request);
         });
       });
     } else {
@@ -148,23 +154,59 @@ async function updateOps({qString, qPrompt}) {
         type: "list",
         message: "Select Employee to Delete",
         choices: empChoices,
-        name: "delEmp"
+        name: "emp"
       }
     ]).then(function(response, err) {
       if(err)
         return reject(err);
-
-      let keys = [];
-      let values = [];
-      for (const [key, value] of Object.entries(response)) {
-        keys.push(key);
-        values.push(value);
+      switch (qPrompt) {
+        case "empNewRole":
+          connection.query(qString, [response.empRole, response.employee], function(err, data) {
+            if (err)
+              return reject(err)
+            resolve("Role Successfully Updated");
+          })
+          return;
+        case "empNewMgr":
+          connection.query(qString, [response.manager, response.employee], function(err, data){
+            if (err)
+              return reject(err)
+            resolve("Manager Successfully Updated");
+          })
+          return;
+        case "delDept":
+          connection.query(qString, [response.dept], function(err, data) {
+            if (err)
+              return reject(err)
+            resolve("Department Successfully Deleted")
+          })
+          return;
+        case "delRole":
+          connection.query(qString, [response.role], function(err, data) {
+            if (err)
+              return reject(err)
+            resolve("Role Successfully Deleted")
+          })
+          return;
+        case "delEmp":
+          connection.query(qString, [response.emp], function(err, data) {
+            if (err)
+              return reject(err)
+            resolve("Employee Successfully Deleted")
+          })
+          return;
       }
-      connection.query(qString, [keys, values], function(err, data) {
-        if (err)
-          return reject(err);
-        resolve(data);
-      })
+      // let keys = [];
+      // let values = [];
+      // for (const [key, value] of Object.entries(response)) {
+      //   keys.push(key);
+      //   values.push(value);
+      // }
+      // connection.query(qString, [keys, values], function(err, data) {
+      //   if (err)
+      //     return reject(err);
+      //   resolve(data);
+      // })
     })
   })
 }
